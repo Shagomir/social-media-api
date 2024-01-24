@@ -1,4 +1,5 @@
 const { User, Thought } = require("../models");
+const { MongoClient, ObjectId } = require("mongodb");
 
 module.exports = {
   // Get all users
@@ -35,11 +36,12 @@ module.exports = {
       res.status(500).json(err);
     }
   },
-  // Delete a user and associated apps
+  // Delete a user and associated thoughts
   async deleteUser(req, res) {
+    // const deletedUser = new ObjectId(req.params.userId);
     try {
       const user = await User.findOneAndDelete({ _id: req.params.userId });
-
+      console.log("user: ", user);
       if (!user) {
         return res.status(404).json({ message: "No user with that ID" });
       }
@@ -50,24 +52,37 @@ module.exports = {
       res.status(500).json(err);
     }
   },
+
   // Add a friend to a user
   async addFriend(req, res) {
     try {
-      const user = await User.findOne({
-        _id: req.params.userID,
-      });
+      // const user = new ObjectId(req.params.userID);
 
-      if (!user) {
-        return res.status(404).json({ message: "No User with this id!" });
-      }
+      // const userCheck = await User.findOne({
+      //   _id: user,
+      // });
 
-      const friend = await User.findOneAndUpdate(
-        { User: req.params.userID },
-        { $addToSet: { friends: friend._id } },
+      // if (!userCheck) {
+      //   return res.status(404).json({ message: "No User with this id!" });
+      // }
+
+      // const friendCheck = await User.findOne({
+      //   _id: req.params.friendID,
+      // });
+
+      // if (!friendCheck) {
+      //   return res.status(404).json({
+      //     message: "Unable to add friend ID of User that does not exist",
+      //   });
+      // }
+
+      const userUpdate = await User.updateOne(
+        { _ID: new ObjectId(req.params.userID) },
+        { $addToSet: { friends: new ObjectId(req.params.friendID) } },
         { new: true }
       );
 
-      if (!friend) {
+      if (!userUpdate) {
         return res.status(404).json({
           message: "Unable to add friend as the user does not exist!",
         });
@@ -81,21 +96,21 @@ module.exports = {
   // Delete a friend from a user
   async removeFriend(req, res) {
     try {
-      const user = await User.findOne({
-        _id: req.params.userID,
+      const userCheck = await User.findOne({
+        _id: new ObjectId(req.params.userID),
       });
 
-      if (!user) {
+      if (!userCheck) {
         return res.status(404).json({ message: "No User with this id!" });
       }
 
-      const friend = await User.findOneAndUpdate(
-        { User: req.params.userID },
-        { $pull: { friends: req.params.friendID } },
+      const removeFriend = await User.updateOne(
+        { _id: ObjectId(req.params.userID) },
+        { $pull: { friends: new ObjectId(req.params.friendID) } },
         { new: true }
       );
 
-      if (!friend) {
+      if (!removeFriend) {
         return res.status(404).json({
           message: "User does not have a friend with this ID",
         });

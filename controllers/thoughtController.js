@@ -1,4 +1,5 @@
 const { Thought, User } = require("../models");
+const { MongoClient, ObjectId } = require("mongodb");
 
 module.exports = {
   // Function to get all of the thoughts
@@ -30,7 +31,7 @@ module.exports = {
       const thought = await Thought.create(req.body);
       const user = await User.findOneAndUpdate(
         { _id: req.body.userId },
-        { $addToSet: { thoughts: thought._id } },
+        { $addToSet: { thoughts: Thought._id } },
         { new: true }
       );
 
@@ -77,15 +78,15 @@ module.exports = {
         return res.status(404).json({ message: "No Thought with this id!" });
       }
 
-      const user = await User.findOneAndUpdate(
+      const deleteFromUser = await User.findOneAndUpdate(
         { thoughts: req.params.thoughtId },
         { $pull: { thoughts: req.params.thoughtId } },
         { new: true }
       );
 
-      if (!user) {
+      if (!deleteFromUser) {
         return res.status(404).json({
-          message: "Thought created but no user with this id!",
+          message: "Thought Deleted, but unable to find user",
         });
       }
 
@@ -98,7 +99,7 @@ module.exports = {
   async addReaction(req, res) {
     try {
       const thought = await Thought.findOneAndUpdate(
-        { _id: req.params.thoughtId },
+        { _id: new ObjectId(req.params.thoughtId) },
         { $addToSet: { reactions: req.body } },
         { runValidators: true, new: true }
       );
@@ -116,7 +117,7 @@ module.exports = {
   async removeReaction(req, res) {
     try {
       const thought = await Thought.findOneAndUpdate(
-        { _id: req.params.thoughtId },
+        { _id: new ObjectId(req.params.thoughtId) },
         { $pull: { reactions: { reactionId: req.params.reactionId } } },
         { runValidators: true, new: true }
       );
