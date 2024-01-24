@@ -56,29 +56,31 @@ module.exports = {
   // Add a friend to a user
   async addFriend(req, res) {
     try {
-      // const user = new ObjectId(req.params.userID);
+      const userCheck = await User.findOne({
+        userID: req.params.userID,
+      });
 
-      // const userCheck = await User.findOne({
-      //   _id: user,
-      // });
+      if (!userCheck) {
+        return res.status(404).json({ message: "No User with this id!" });
+      }
 
-      // if (!userCheck) {
-      //   return res.status(404).json({ message: "No User with this id!" });
-      // }
+      const friend = await User.findOne({
+        userId: req.params.userID,
+      });
 
-      // const friendCheck = await User.findOne({
-      //   _id: req.params.friendID,
-      // });
-
-      // if (!friendCheck) {
+      // if (!friend) {
       //   return res.status(404).json({
       //     message: "Unable to add friend ID of User that does not exist",
       //   });
       // }
 
       const userUpdate = await User.updateOne(
-        { _ID: new ObjectId(req.params.userID) },
-        { $addToSet: { friends: new ObjectId(req.params.friendID) } },
+        { UserID: req.params.userID },
+        {
+          $addToSet: {
+            friends: { username: friend.username, email: friend.email },
+          },
+        },
         { new: true }
       );
 
